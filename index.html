@@ -1491,14 +1491,16 @@ window.addEventListener('touchend',e=>{if(!e.touches||e.touches.length===0)hardR
 window.addEventListener('touchcancel',()=>hardRelease(),{passive:true,capture:true});
 window.addEventListener('blur',hardRelease);document.addEventListener('visibilitychange',()=>{if(document.hidden)hardRelease()});
 /* ---------- per-frame: strike ready glow, now-playing, view state ---------- */
-let lastScr='',lastSt='',lastPart='';
+let lastScr='',lastSt='',matchArmed=false;
 function tick(){
  requestAnimationFrame(tick);pollPads();
  const f=G.p[0];const st=f&&G.screen==='fight'?(f.meter>=50?'sp':(f.strikeCD>0?'cd':'st')):'st';
  if(st!==lastSt){lastSt=st;const sb=ctl.querySelector('[data-k=s]');sb.classList.toggle('rdy',st==='sp');sb.classList.toggle('cd',st==='cd');sb.querySelector('span').textContent=st==='sp'?'SPECIAL':'STRIKE';
  const gy=gb.querySelector('#gb-Y');gy.classList.toggle('rdy',st==='sp');gy.querySelector('span').textContent=st==='sp'?'SPECIAL':'STRIKE';}
- const part=G.screen==='fight'?'fight':G.screen==='result'?'result':'menu';
- if(part!==lastPart){if(lastPart&&M.started&&M.on&&TR.length)next();lastPart=part}
+ // one song change per match, when the first round's fight begins (after the VS screen);
+ // menus, VS, round breaks and results keep whatever is playing
+ if(G.screen==='fight'&&G.phase==='vs')matchArmed=true;
+ if(matchArmed&&G.screen==='fight'&&G.phase==='fight'){matchArmed=false;if(M.started&&M.on&&TR.length)next()}
  if(G.screen!==lastScr){lastScr=G.screen;if(focusEl){focusEl.classList.remove('gpf');focusEl=null}addOpts();if(navUsed&&G.screen!=='fight')setTimeout(autoFocus,60);layout();if(G.screen!=='fight')releaseAll();if(G.screen==='fight')npShowT=Date.now()+4500;}
  npVis();
 }
