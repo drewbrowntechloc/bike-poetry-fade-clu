@@ -1055,7 +1055,7 @@ function show(name){root.querySelectorAll('.scr').forEach(s=>s.classList.toggle(
 function html(s,h){$(s).innerHTML=h}
 function buildTitle(){
  html('[data-s=title]',`<div class="logo"><div class="crown">♛</div><div class="bt">BIKE POETRY</div><div class="st">FADE CLUB</div><div class="sub">BIRCHVILLE WORLD TOURNAMENT</div></div>
- <div class="menu"><button data-a="arcade">ARCADE</button><button data-a="vs">VS CPU</button><button data-a="how">HOW TO PLAY</button></div>
+ <div class="menu"><button data-a="arcade">ARCADE</button><button data-a="vs">VS CPU</button><button data-a="ride">RIDE</button><button data-a="how">HOW TO PLAY</button></div>
  <div class="opts"><button data-a="snd">SOUND: <b>ON</b></button><button data-a="voc">ANNOUNCER: <b>ON</b></button></div>`)
  html('[data-s=diff]',`<div class="dt">CHOOSE YOUR DIFFICULTY</div><div class="dcards">
  <button data-a="d0"><b>EASY</b><span>Learn the ropes. The CPU is slow, forgiving, and rarely combos.</span></button>
@@ -1110,6 +1110,7 @@ function act(a,el){
   case '2p':startSelect(a);break;
   case 'd0':case 'd1':case 'd2':G.diff=+a[1];startSelect(G.pend);break;
   case 'how':show('how');sfx('ok');break;
+  case 'ride':sfx('ok');stopMusic();location.href='ride.html';break;
   case 'snd':sfxOn=!sfxOn;musicOn=sfxOn;if(!sfxOn)stopMusic();hasSnd();break;
   case 'voc':voiceOn=!voiceOn;if(!voiceOn&&window.speechSynthesis)speechSynthesis.cancel();hasSnd();break;
   
