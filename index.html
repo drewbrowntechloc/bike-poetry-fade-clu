@@ -429,7 +429,7 @@ function damage(f,o,dmg,a,spk){
  o.atk=null;o.react=14;o.rk=(a&&a.kind==='kick')?'body':'head';
  if(o.hp<=0){o.hp=0;ko(o,f,dir)}
  else if(air){o.vy=8;o.vx=dir*((a&&a.kb)||10);o.jug=true;o.t=0}
- else if(a&&a.grab){o.st='hit';o.stun=40;o.vx=0;o.grabT=18;o.grabber=f}
+ else if(a&&a.grab){o.st='hit';o.stun=60;o.vx=0;o.grabT=SPIN;o.grabber=f;o.grabFace=f.face}
  else if(a&&a.launch){o.st='down';o.vy=14.5;o.y=Math.max(o.y,.01);o.vx=dir*3;o.down=0;o.launched=true;o.jug=false}
  else if(a&&a.kd){o.st='down';o.vy=8;o.y=Math.max(o.y,.01);o.vx=dir*(a.kb||8)*.8;o.down=0;o.launched=false}
  else{o.st='hit';o.stun=(a&&a.hs)||14;o.vx=dir*((a&&a.kb)||5)*.9;if(o.y>0)o.vy=Math.max(o.vy,4)}
@@ -463,7 +463,8 @@ function updSpr(){if(!G.spr)return;for(const s of G.spr)s.t++;G.spr=G.spr.filter
 function drawSpr(){if(!G.spr)return;for(const s of G.spr){const i=Math.min(s.fx.length-1,Math.floor(s.t*s.rate/60)),q=s.fx[i];if(!q.img||!q.ld)continue;ctx.save();ctx.translate(s.x,s.y);ctx.scale(s.face*s.sc,s.sc);ctx.drawImage(q.img,-q.ax,-q.ay,q.w,q.h);ctx.restore()}}
 function spawnProj(f){const d=f.def,sh=d.shape;const big=sh==='wave'||sh==='hole'||sh==='orb';
  G.projs.push({x:f.x+f.face*50,y:d.H*(sh==='ball'?.5:.55),vx:f.face*d.pv,o:f,d,dm:d.dmg,l:150,sh,r:big?34:sh==='pen'?26:22,c:d.c,c2:d.c2,pull:d.pull,t:0,f:f.face});sfx('proj')}
-function updF(f,o){if(f.grabT>0){const g=f.grabber;f.grabT--;f.t++;f.x=g.x+g.face*62;f.y=Math.min(80,f.y+7);f.vx=0;f.vy=0;f.st='hit';f.stun=6;if(f.grabT===0){f.st='down';f.vy=-3;f.vx=g.face*6;f.down=0;f.launched=true;f.jug=true;f.slam=1;f.grabber=null}return}
+const SPIN=38;
+function updF(f,o){if(f.grabT>0){const g=f.grabber,fc=f.grabFace;f.grabT--;f.t++;const q=1-f.grabT/SPIN,th=q*Math.PI*2,c=Math.cos(th);f.x=Math.max(50,Math.min(910,g.x+fc*64*c));f.y=Math.min(78,f.y+9)+Math.abs(Math.sin(th))*10;f.vx=0;f.vy=0;f.st='hit';f.stun=6;g.spinFace=c>=0?fc:-fc;f.spinFace=f.x<g.x?1:-1;if(g.atk)g.atk.fr=Math.max(0,g.atk.fr-1);if(f.grabT===Math.floor(SPIN/2))sfx('whoosh');if(f.grabT===0){g.spinFace=0;f.spinFace=0;f.st='down';f.vy=-3;f.vx=fc*6;f.down=0;f.launched=true;f.jug=true;f.slam=1;f.grabber=null}return}
  const d=f.def;f.t++;if(f.st!==f._ps){f._pp=f._ps;f._ps=f.st;f.stT=0}else f.stT=(f.stT||0)+1;if(f.sprint&&f.st==='walk'&&f.y===0&&G.tick%7===0)addSpr(d.id,'rundust',f.x-f.face*34,GY,f.face,.5,15);if(f.inv>0)f.inv--;if(f.react>0)f.react--;if(f.landT>0)f.landT--;if(f.strikeCD>0)f.strikeCD--;if(f.chain.t>0&&--f.chain.t===0)f.chain.n=0;
  const air=f.y>0||f.vy>0;
  if(f.st==='ko'){physics(f);if(f.y===0&&f.vy===0){f.vx*=.8}return}
@@ -687,7 +688,7 @@ function updProj(){
   for(let j=0;j<G.projs.length;j++){const q=G.projs[j];if(q!==p&&q.o!==p.o&&Math.abs(q.x-p.x)<40&&Math.abs(q.y-p.y)<50){spark(p.x,GY-p.y,'#fff',16,7);ring(p.x,GY-p.y,'#fff',8,60,14);G.projs.splice(Math.max(i,j),1);G.projs.splice(Math.min(i,j),1);i=Math.min(i,G.projs.length);sfx('block');break}}
   const hb=hurt(tgt);
   if(p&&G.projs[i]===p&&Math.abs(tgt.x-p.x)<p.r+30&&overlap(p.y-p.r,p.y+p.r,hb[0],hb[1])&&tgt.inv===0&&tgt.st!=='ko'&&tgt.st!=='down'&&tgt.st!=='getup'){
-   damage(p.o,tgt,p.dm,{kd:1,kb:p.d.shape==='wave'?14:10,hs:22,kind:'kick'},p.c);G.projs.splice(i,1);spark(p.x,GY-p.y,p.c,16,7);if(p.sh==='pen')addSpr(p.o.def.id,p.v2&&SETS[p.o.def.id].fx.burst2?'burst2':'burst',p.x,GY-p.y,1,.55,12)}
+   damage(p.o,tgt,p.dm,{kd:1,kb:p.d.shape==='wave'?14:10,hs:22,kind:'kick'},p.c);if(p.o.def.id==='gaplord'&&tgt.st!=='block'&&tgt.st!=='bs')popup('HOLY GHOST!',tgt.x,GY-tgt.def.H-34,'#ffd000',36);G.projs.splice(i,1);spark(p.x,GY-p.y,p.c,16,7);if(p.sh==='pen')addSpr(p.o.def.id,p.v2&&SETS[p.o.def.id].fx.burst2?'burst2':'burst',p.x,GY-p.y,1,.55,12)}
  }
 }
 /* ---------- RENDER ---------- */
@@ -799,7 +800,7 @@ function drawNun(f,d,a,face){
  stick(cx,cy,ang-0.55,L2);
  ctx.restore()}
 function drawF(f,ox,alpha,frOver,fc){
- const d=f.def,set=SETS[d.id],s=d.H/set.ih;const face=fc||f.face;
+ const d=f.def,set=SETS[d.id],s=d.H/set.ih;const face=fc||f.spinFace||f.face;
  let fr,T;
  if(frOver){fr=frOver;T={x:0,y:0,r:0,sx:1,sy:1}}
  else{[fr,T]=pickFrame(f);
